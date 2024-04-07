@@ -1,5 +1,5 @@
 //go:generate mockgen -source=$GOFILE -package=mock_usecase -destination=mock/mock_usecase/$GOFILE
-package invoice
+package server
 
 import (
 	"context"
@@ -9,6 +9,6 @@ import (
 )
 
 type InvoiceUsecase interface {
-	Create(ctx context.Context, PublishDate time.Time, Payment uint64, CommissionTaxRate float64, TaxRate float64, PaymentDate time.Time) (*models.Invoice, error)
+	Create(ctx context.Context, companyGUID, CustomerGUID string, publishDate time.Time, payment uint64, commissionTaxRate float64, taxRate float64, paymentDate time.Time) (*models.Invoice, error)
 	List(ctx context.Context, companyGUID string, firstPaymentDate, lastPaymentDate time.Time) ([]*models.Invoice, error)
 }

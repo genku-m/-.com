@@ -17,13 +17,13 @@ func TestCreate(t *testing.T) {
 	PublishDate, _ := time.Parse("2006-01-02T15:04:05Z07:00", "2024-04-01T00:00:00Z")
 	PaymentDate, _ := time.Parse("2006-01-02T15:04:05Z07:00", "2024-04-05T00:00:00Z")
 	type args struct {
-		CompanyGUID       string
-		CustomerGUID      string
-		PublishDate       time.Time
-		Payment           uint64
-		CommissionTaxRate float64
-		TaxRate           float64
-		PaymentDate       time.Time
+		companyGUID       string
+		customerGUID      string
+		publishDate       time.Time
+		payment           uint64
+		commissionTaxRate float64
+		taxRate           float64
+		paymentDate       time.Time
 	}
 	type want struct {
 		err     error
@@ -38,13 +38,13 @@ func TestCreate(t *testing.T) {
 		{
 			descrition: "正常系",
 			args: args{
-				CompanyGUID:       "company_guid",
-				CustomerGUID:      "customer_guid",
-				PublishDate:       PublishDate,
-				Payment:           10000,
-				CommissionTaxRate: 0.04,
-				TaxRate:           0.10,
-				PaymentDate:       PaymentDate,
+				companyGUID:       "company_guid",
+				customerGUID:      "customer_guid",
+				publishDate:       PublishDate,
+				payment:           10000,
+				commissionTaxRate: 0.04,
+				taxRate:           0.10,
+				paymentDate:       PaymentDate,
 			},
 			setup: func(mockGuid *mock_guid.MockGuid, repo *mock_repository.MockInvoiceRepository) {
 				mockGuid.EXPECT().New().Return("guid")
@@ -93,7 +93,7 @@ func TestCreate(t *testing.T) {
 				tt.setup(guid, repo)
 			}
 			uc := invoice_usecase.NewInvoiceUsecase(guid, repo)
-			res, err := uc.Create(context.Background(), tt.args.CompanyGUID, tt.args.CustomerGUID, tt.args.PublishDate, tt.args.Payment, tt.args.CommissionTaxRate, tt.args.TaxRate, tt.args.PaymentDate)
+			res, err := uc.Create(context.Background(), tt.args.companyGUID, tt.args.customerGUID, tt.args.publishDate, tt.args.payment, tt.args.commissionTaxRate, tt.args.taxRate, tt.args.paymentDate)
 			if err != nil {
 				assert.Equal(t, tt.want.err, err)
 			}
