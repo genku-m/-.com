@@ -27,19 +27,19 @@ func NewInvoiceRepository(db *sql.DB) *InvoiceRepository {
 }
 
 type Invoice struct {
-	ID             uint32    `db:"id"`
-	GUID           string    `db:"guid"`
-	CompanyID      uint32    `db:"company_id"`
-	CustomerID     uint32    `db:"customer_id"`
-	PublishDate    time.Time `db:"publish_date"`
-	Payment        uint32    `db:"payment"`
-	Commission     float64   `db:"commission"`
-	CommissionTax  float64   `db:"commission_tax"`
-	ConsumptionTax uint32    `db:"consumption_tax"`
-	TaxRate        uint32    `db:"tax_rate"`
-	BillingAmount  uint32    `db:"billing_amount"`
-	PaymentDate    time.Time `db:"payment_date"`
-	Status         string    `db:"status"`
+	ID                uint32    `db:"id"`
+	GUID              string    `db:"guid"`
+	CompanyID         uint32    `db:"company_id"`
+	CustomerID        uint32    `db:"customer_id"`
+	PublishDate       time.Time `db:"publish_date"`
+	Payment           uint64    `db:"payment"`
+	CommissionTax     uint64    `db:"commission"`
+	CommissionTaxRate float64   `db:"commission_tax"`
+	ConsumptionTax    uint64    `db:"consumption_tax"`
+	TaxRate           float64   `db:"tax_rate"`
+	BillingAmount     uint64    `db:"billing_amount"`
+	PaymentDate       time.Time `db:"payment_date"`
+	Status            string    `db:"status"`
 }
 
 type InvoiceWithCustomerGUID struct {
@@ -47,7 +47,7 @@ type InvoiceWithCustomerGUID struct {
 	CustomerGUID string `db:"guid"`
 }
 
-func (r *InvoiceRepository) Create(ctx context.Context, invoice models.Invoice) error {
+func (r *InvoiceRepository) Create(ctx context.Context, invoice *models.Invoice) error {
 	var customerID, companyID uint32
 	err := r.db.QueryRowContext(ctx, "SELECT id, company_id FROM customer WHERE guid=?", invoice.CustomerGUID).Scan(&companyID, &customerID)
 	if err != nil {
@@ -65,8 +65,8 @@ func (r *InvoiceRepository) Create(ctx context.Context, invoice models.Invoice) 
 		coustomer_id,
 		publish_date,
 		payment,
-		commission,
 		commission_tax,
+		commission_tax_rate,
 		consumption_tax,
 		tax_rate,
 		billing_amount,
@@ -78,8 +78,8 @@ func (r *InvoiceRepository) Create(ctx context.Context, invoice models.Invoice) 
 		customerID,
 		invoice.PublishDate,
 		invoice.Payment,
-		invoice.Commission,
 		invoice.CommissionTax,
+		invoice.CommissionTaxRate,
 		invoice.ConsumptionTax,
 		invoice.TaxRate,
 		invoice.BillingAmount,
@@ -140,18 +140,18 @@ func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstP
 		}
 
 		invoiceModels = append(invoiceModels, models.Invoice{
-			GUID:           invoice.GUID,
-			CompanyGUID:    companyGUID,
-			CustomerGUID:   invoice.CustomerGUID,
-			PublishDate:    invoice.PublishDate,
-			Payment:        invoice.Payment,
-			Commission:     invoice.Commission,
-			CommissionTax:  invoice.CommissionTax,
-			ConsumptionTax: invoice.ConsumptionTax,
-			TaxRate:        invoice.TaxRate,
-			BillingAmount:  invoice.BillingAmount,
-			PaymentDate:    invoice.PaymentDate,
-			Status:         status,
+			GUID:              invoice.GUID,
+			CompanyGUID:       companyGUID,
+			CustomerGUID:      invoice.CustomerGUID,
+			PublishDate:       invoice.PublishDate,
+			Payment:           invoice.Payment,
+			CommissionTax:     invoice.CommissionTax,
+			CommissionTaxRate: invoice.CommissionTaxRate,
+			ConsumptionTax:    invoice.ConsumptionTax,
+			TaxRate:           invoice.TaxRate,
+			BillingAmount:     invoice.BillingAmount,
+			PaymentDate:       invoice.PaymentDate,
+			Status:            status,
 		})
 	}
 

@@ -3,16 +3,16 @@ package models
 import "time"
 
 type Invoice struct {
-	GUID           string
-	CompanyGUID    string
-	CustomerGUID   string
-	PublishDate    time.Time
-	Payment        uint32
-	Commission     float64
-	CommissionTax  float64
-	ConsumptionTax uint32
-	TaxRate        uint32
-	BillingAmount  uint32
-	PaymentDate    time.Time
-	Status         InvoiceStatus
+	GUID              string
+	CompanyGUID       string
+	CustomerGUID      string
+	PublishDate       time.Time
+	Payment           uint64
+	CommissionTax     uint64
+	CommissionTaxRate float64
+	ConsumptionTax    uint64
+	TaxRate           float64
+	BillingAmount     uint64
+	PaymentDate       time.Time
+	Status            InvoiceStatus
 }
