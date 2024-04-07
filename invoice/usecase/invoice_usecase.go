@@ -20,25 +20,25 @@ func NewInvoiceUsecase(guid Guid, invoiceRepo InvoiceRepository) *invoiceUsecase
 	}
 }
 
-func (i *invoiceUsecase) Create(ctx context.Context, CompanyGUID, CustomerGUID string, PublishDate time.Time, Payment uint64, CommissionTaxRate, TaxRate float64, PaymentDate time.Time) (*models.Invoice, error) {
-	PaymentDecimal := decimal.NewFromInt(int64(Payment))
-	CommissionTaxRateDecimal := decimal.NewFromFloat(CommissionTaxRate)
-	TaxRateDecimal := decimal.NewFromFloat(TaxRate)
-	CommissionTax := PaymentDecimal.Mul(CommissionTaxRateDecimal)
-	ConsumptionTax := CommissionTax.Mul(TaxRateDecimal)
-	BillingAmount := PaymentDecimal.Add(CommissionTax).Add(ConsumptionTax)
+func (i *invoiceUsecase) Create(ctx context.Context, companyGUID, customerGUID string, publishDate time.Time, payment uint64, commissionTaxRate, taxRate float64, paymentDate time.Time) (*models.Invoice, error) {
+	paymentDecimal := decimal.NewFromInt(int64(payment))
+	commissionTaxRateDecimal := decimal.NewFromFloat(commissionTaxRate)
+	taxRateDecimal := decimal.NewFromFloat(taxRate)
+	commissionTax := paymentDecimal.Mul(commissionTaxRateDecimal)
+	consumptionTax := commissionTax.Mul(taxRateDecimal)
+	billingAmount := paymentDecimal.Add(commissionTax).Add(consumptionTax)
 	invoiceModel := &models.Invoice{
 		GUID:              i.Guid.New(),
-		CompanyGUID:       CompanyGUID,
-		CustomerGUID:      CustomerGUID,
-		PublishDate:       PublishDate,
-		Payment:           Payment,
-		CommissionTax:     CommissionTax.BigInt().Uint64(),
-		CommissionTaxRate: CommissionTaxRate,
-		ConsumptionTax:    ConsumptionTax.BigInt().Uint64(),
-		TaxRate:           TaxRate,
-		BillingAmount:     BillingAmount.BigInt().Uint64(),
-		PaymentDate:       PaymentDate,
+		CompanyGUID:       companyGUID,
+		CustomerGUID:      customerGUID,
+		PublishDate:       publishDate,
+		Payment:           payment,
+		CommissionTax:     commissionTax.BigInt().Uint64(),
+		CommissionTaxRate: commissionTaxRate,
+		ConsumptionTax:    consumptionTax.BigInt().Uint64(),
+		TaxRate:           taxRate,
+		BillingAmount:     billingAmount.BigInt().Uint64(),
+		PaymentDate:       paymentDate,
 		// 既に支払い済みのものを作るユースケースがあるかどうか
 		Status: models.InvoiceStatusUnprocessed,
 	}

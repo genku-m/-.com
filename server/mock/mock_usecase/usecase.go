@@ -37,18 +37,18 @@ func (m *MockInvoiceUsecase) EXPECT() *MockInvoiceUsecaseMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockInvoiceUsecase) Create(ctx context.Context, PublishDate time.Time, Payment uint64, CommissionTaxRate, TaxRate float64, PaymentDate time.Time) (*models.Invoice, error) {
+func (m *MockInvoiceUsecase) Create(ctx context.Context, companyGUID, CustomerGUID string, publishDate time.Time, payment uint64, commissionTaxRate, taxRate float64, paymentDate time.Time) (*models.Invoice, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", ctx, PublishDate, Payment, CommissionTaxRate, TaxRate, PaymentDate)
+	ret := m.ctrl.Call(m, "Create", ctx, companyGUID, CustomerGUID, publishDate, payment, commissionTaxRate, taxRate, paymentDate)
 	ret0, _ := ret[0].(*models.Invoice)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockInvoiceUsecaseMockRecorder) Create(ctx, PublishDate, Payment, CommissionTaxRate, TaxRate, PaymentDate interface{}) *gomock.Call {
+func (mr *MockInvoiceUsecaseMockRecorder) Create(ctx, companyGUID, CustomerGUID, publishDate, payment, commissionTaxRate, taxRate, paymentDate interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockInvoiceUsecase)(nil).Create), ctx, PublishDate, Payment, CommissionTaxRate, TaxRate, PaymentDate)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockInvoiceUsecase)(nil).Create), ctx, companyGUID, CustomerGUID, publishDate, payment, commissionTaxRate, taxRate, paymentDate)
 }
 
 // List mocks base method.
