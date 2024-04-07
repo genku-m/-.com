@@ -1,3 +1,4 @@
+//go:generate mockgen -source=$GOFILE -package=mock_invoice_usecase -destination=mock/$GOPACKAGE/mock_$GOFILE
 package invoice
 
 import (
