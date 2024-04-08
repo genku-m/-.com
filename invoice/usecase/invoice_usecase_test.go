@@ -101,3 +101,143 @@ func TestCreate(t *testing.T) {
 		})
 	}
 }
+
+func TestList(t *testing.T) {
+	type args struct {
+		companyGUID                       string
+		firstPaymentDate, lastPaymentDate time.Time
+	}
+	type want struct {
+		err     error
+		invoice []*models.Invoice
+	}
+	tests := []struct {
+		descrition string
+		args       args
+		setup      func(MocknvoiceRepository *mock_repository.MockInvoiceRepository)
+		want       want
+	}{
+		{
+			descrition: "正常系",
+			args: args{
+				companyGUID:      "company_guid",
+				firstPaymentDate: time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+				lastPaymentDate:  time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC),
+			},
+			setup: func(repo *mock_repository.MockInvoiceRepository) {
+				repo.EXPECT().List(gomock.Any(),
+					"company_guid",
+					time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+					time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC),
+				).Return(
+					[]*models.Invoice{
+						{
+							GUID:              "guid1",
+							CompanyGUID:       "company_guid1",
+							CustomerGUID:      "customer_guid1",
+							PublishDate:       time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+							Payment:           10000,
+							CommissionTax:     400,
+							CommissionTaxRate: 0.04,
+							ConsumptionTax:    40,
+							TaxRate:           0.10,
+							BillingAmount:     10440,
+							PaymentDate:       time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+							Status:            models.InvoiceStatusPaied,
+						},
+						{
+							GUID:              "guid2",
+							CompanyGUID:       "company_guid2",
+							CustomerGUID:      "customer_guid2",
+							PublishDate:       time.Date(2024, 4, 2, 0, 0, 0, 0, time.UTC),
+							Payment:           10000,
+							CommissionTax:     400,
+							CommissionTaxRate: 0.04,
+							ConsumptionTax:    40,
+							TaxRate:           0.10,
+							BillingAmount:     10440,
+							PaymentDate:       time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+							Status:            models.InvoiceStatusUnprocessed,
+						},
+						{
+							GUID:              "guid3",
+							CompanyGUID:       "company_guid3",
+							CustomerGUID:      "customer_guid3",
+							PublishDate:       time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+							Payment:           10000,
+							CommissionTax:     400,
+							CommissionTaxRate: 0.04,
+							ConsumptionTax:    40,
+							TaxRate:           0.10,
+							BillingAmount:     10440,
+							PaymentDate:       time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC),
+							Status:            models.InvoiceStatusError,
+						},
+					}, nil)
+			},
+			want: want{
+				invoice: []*models.Invoice{
+					{
+						GUID:              "guid1",
+						CompanyGUID:       "company_guid1",
+						CustomerGUID:      "customer_guid1",
+						PublishDate:       time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+						Payment:           10000,
+						CommissionTax:     400,
+						CommissionTaxRate: 0.04,
+						ConsumptionTax:    40,
+						TaxRate:           0.10,
+						BillingAmount:     10440,
+						PaymentDate:       time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+						Status:            models.InvoiceStatusPaied,
+					},
+					{
+						GUID:              "guid2",
+						CompanyGUID:       "company_guid2",
+						CustomerGUID:      "customer_guid2",
+						PublishDate:       time.Date(2024, 4, 2, 0, 0, 0, 0, time.UTC),
+						Payment:           10000,
+						CommissionTax:     400,
+						CommissionTaxRate: 0.04,
+						ConsumptionTax:    40,
+						TaxRate:           0.10,
+						BillingAmount:     10440,
+						PaymentDate:       time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+						Status:            models.InvoiceStatusUnprocessed,
+					},
+					{
+						GUID:              "guid3",
+						CompanyGUID:       "company_guid3",
+						CustomerGUID:      "customer_guid3",
+						PublishDate:       time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+						Payment:           10000,
+						CommissionTax:     400,
+						CommissionTaxRate: 0.04,
+						ConsumptionTax:    40,
+						TaxRate:           0.10,
+						BillingAmount:     10440,
+						PaymentDate:       time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC),
+						Status:            models.InvoiceStatusError,
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.descrition, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			repo := mock_repository.NewMockInvoiceRepository(ctrl)
+			if tt.setup != nil {
+				tt.setup(repo)
+			}
+			uc := invoice_usecase.NewInvoiceUsecase(nil, repo)
+			res, err := uc.List(context.Background(), tt.args.companyGUID, tt.args.firstPaymentDate, tt.args.lastPaymentDate)
+			if err != nil {
+				assert.Equal(t, tt.want.err, err)
+			}
+			assert.Equal(t, tt.want.invoice, res)
+		})
+	}
+}
