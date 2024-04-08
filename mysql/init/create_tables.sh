@@ -10,7 +10,7 @@ $CMD_MYSQL -e "create table company (
 	zip_code varchar(255) NOT NULL,
 	address varchar(255) NOT NULL,
     UNIQUE KEY (guid)
-    ) ENGINE=INNODB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     create table user (
     id int(10)  AUTO_INCREMENT NOT NULL primary key,
     guid varchar(255) NOT NULL,
@@ -21,7 +21,7 @@ $CMD_MYSQL -e "create table company (
     UNIQUE KEY (guid),
     INDEX company_id_on_user (company_id),
     FOREIGN KEY (company_id) REFERENCES company (id) ON DELETE CASCADE
-    ) ENGINE=INNODB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     create table customer (
     id int(10)  AUTO_INCREMENT NOT NULL primary key,
     guid varchar(255) NOT NULL,
@@ -34,7 +34,7 @@ $CMD_MYSQL -e "create table company (
     UNIQUE KEY (guid),
     INDEX company_id_on_customer (company_id),
     FOREIGN KEY (company_id) REFERENCES company (id) ON DELETE CASCADE
-    ) ENGINE=INNODB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     create table bank_account (
     id int(10)  AUTO_INCREMENT NOT NULL primary key,
     guid varchar(255) NOT NULL,
@@ -47,12 +47,12 @@ $CMD_MYSQL -e "create table company (
     UNIQUE KEY (guid),
     INDEX customer_id_on_bank_account (customer_id),
     FOREIGN KEY (customer_id) REFERENCES customer (id) ON DELETE CASCADE
-    ) ENGINE=INNODB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     create table invoice_status (
     id int(10)  AUTO_INCREMENT NOT NULL primary key,
     status varchar(255) NOT NULL,
     UNIQUE KEY (status)
-    ) ENGINE=INNODB;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     insert into invoice_status (status) values ('unprocessed');
     insert into invoice_status (status) values ('processing');
     insert into invoice_status (status) values ('paied');
@@ -78,4 +78,4 @@ $CMD_MYSQL -e "create table company (
     FOREIGN KEY (status) REFERENCES invoice_status (status),
     FOREIGN KEY (company_id) REFERENCES company (id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES customer (id)
-    ) ENGINE=INNODB;"
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
