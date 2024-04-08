@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
 	"github.com/genku-m/upsider-cording-test/models"
 )
 
@@ -53,9 +54,9 @@ func (r *InvoiceRepository) Create(ctx context.Context, invoice *models.Invoice)
 	if err != nil {
 		switch {
 		case err == sql.ErrNoRows:
-			return fmt.Errorf("customer not found: %v", invoice.CustomerGUID)
+			return errpkg.NewNotFoundError(fmt.Errorf("customer not found: %v err: %v", invoice.CustomerGUID, err.Error()))
 		default:
-			return err
+			return errpkg.NewInternalError(err)
 		}
 	}
 
@@ -86,7 +87,7 @@ func (r *InvoiceRepository) Create(ctx context.Context, invoice *models.Invoice)
 		invoice.PaymentDate,
 		invoice.Status)
 	if err != nil {
-		return err
+		return errpkg.NewInternalError(err)
 	}
 	return nil
 }
@@ -97,9 +98,9 @@ func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstP
 	if err != nil {
 		switch {
 		case err == sql.ErrNoRows:
-			return nil, fmt.Errorf("customer not found: %v", companyGUID)
+			return nil, errpkg.NewNotFoundError(fmt.Errorf("company not found: %v err: %v", companyGUID, err.Error()))
 		default:
-			return nil, err
+			return nil, errpkg.NewInternalError(err)
 		}
 	}
 
@@ -110,7 +111,7 @@ func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstP
 	JOIN customer ON invoice.customer_id = customer.id
 	WHERE ? AND payment_date BETWEEN ? AND ?`, companyGUID, firstPaymentDate, lastPaymentDate)
 	if err != nil {
-		return nil, err
+		return nil, errpkg.NewInternalError(err)
 	}
 	defer rows.Close()
 
@@ -132,7 +133,7 @@ func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstP
 			&invoice.Invoice.Status,
 			&invoice.CustomerGUID,
 		); err != nil {
-			return nil, err
+			return nil, errpkg.NewInternalError(err)
 		}
 		invoices = append(invoices, invoice)
 	}
@@ -142,19 +143,19 @@ func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstP
 	// encounter an auto-commit error and be forced to rollback changes.
 	rerr := rows.Close()
 	if rerr != nil {
-		return nil, rerr
+		return nil, errpkg.NewInternalError(rerr)
 	}
 
 	// Rows.Err will report the last error encountered by Rows.Scan.
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, errpkg.NewInternalError(err)
 	}
 
 	invoiceModels := make([]*models.Invoice, 0, len(invoices))
 	for _, invoice := range invoices {
 		status, err := toModelsStatus(invoice.Status)
 		if err != nil {
-			return nil, err
+			return nil, errpkg.NewInternalError(err)
 		}
 
 		invoiceModels = append(invoiceModels, &models.Invoice{

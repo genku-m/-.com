@@ -2,9 +2,11 @@ package invoice_usecase_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
+	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
 	invoice_usecase "github.com/genku-m/upsider-cording-test/invoice/usecase"
 	"github.com/genku-m/upsider-cording-test/invoice/usecase/mock/mock_guid"
 	"github.com/genku-m/upsider-cording-test/invoice/usecase/mock/mock_repository"
@@ -26,7 +28,7 @@ func TestCreate(t *testing.T) {
 		paymentDate       time.Time
 	}
 	type want struct {
-		err     error
+		err     errpkg.ErrCode
 		invoice *models.Invoice
 	}
 	tests := []struct {
@@ -64,7 +66,6 @@ func TestCreate(t *testing.T) {
 				}).Return(nil)
 			},
 			want: want{
-				err: nil,
 				invoice: &models.Invoice{
 					GUID:              "guid",
 					CompanyGUID:       "company_guid",
@@ -81,6 +82,70 @@ func TestCreate(t *testing.T) {
 				},
 			},
 		},
+		{
+			descrition: "Repository.CreateからErrNotFoundが返ってきた場合",
+			args: args{
+				companyGUID:       "company_guid",
+				customerGUID:      "customer_guid",
+				publishDate:       PublishDate,
+				payment:           10000,
+				commissionTaxRate: 0.04,
+				taxRate:           0.10,
+				paymentDate:       PaymentDate,
+			},
+			setup: func(mockGuid *mock_guid.MockGuid, repo *mock_repository.MockInvoiceRepository) {
+				mockGuid.EXPECT().Generate().Return("guid")
+				repo.EXPECT().Create(gomock.Any(), &models.Invoice{
+					GUID:              "guid",
+					CompanyGUID:       "company_guid",
+					CustomerGUID:      "customer_guid",
+					PublishDate:       PublishDate,
+					Payment:           10000,
+					CommissionTax:     400,
+					CommissionTaxRate: 0.04,
+					ConsumptionTax:    40,
+					TaxRate:           0.10,
+					BillingAmount:     10440,
+					PaymentDate:       PaymentDate,
+					Status:            models.InvoiceStatusUnprocessed,
+				}).Return(errpkg.NewNotFoundError(errors.New("not found")))
+			},
+			want: want{
+				err: errpkg.ErrNotFound,
+			},
+		},
+		{
+			descrition: "Repository.CreateからErrInternalが返ってきた場合",
+			args: args{
+				companyGUID:       "company_guid",
+				customerGUID:      "customer_guid",
+				publishDate:       PublishDate,
+				payment:           10000,
+				commissionTaxRate: 0.04,
+				taxRate:           0.10,
+				paymentDate:       PaymentDate,
+			},
+			setup: func(mockGuid *mock_guid.MockGuid, repo *mock_repository.MockInvoiceRepository) {
+				mockGuid.EXPECT().Generate().Return("guid")
+				repo.EXPECT().Create(gomock.Any(), &models.Invoice{
+					GUID:              "guid",
+					CompanyGUID:       "company_guid",
+					CustomerGUID:      "customer_guid",
+					PublishDate:       PublishDate,
+					Payment:           10000,
+					CommissionTax:     400,
+					CommissionTaxRate: 0.04,
+					ConsumptionTax:    40,
+					TaxRate:           0.10,
+					BillingAmount:     10440,
+					PaymentDate:       PaymentDate,
+					Status:            models.InvoiceStatusUnprocessed,
+				}).Return(errpkg.NewInternalError(errors.New("internal")))
+			},
+			want: want{
+				err: errpkg.ErrInternal,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.descrition, func(t *testing.T) {
@@ -95,7 +160,11 @@ func TestCreate(t *testing.T) {
 			uc := invoice_usecase.NewInvoiceUsecase(guid, repo)
 			res, err := uc.Create(context.Background(), tt.args.companyGUID, tt.args.customerGUID, tt.args.publishDate, tt.args.payment, tt.args.commissionTaxRate, tt.args.taxRate, tt.args.paymentDate)
 			if err != nil {
-				assert.Equal(t, tt.want.err, err)
+				serverError, ok := err.(*errpkg.ServerError)
+				if !ok {
+					t.FailNow()
+				}
+				assert.Equal(t, tt.want.err, serverError.ErrCode)
 			}
 			assert.Equal(t, tt.want.invoice, res)
 		})
@@ -108,7 +177,7 @@ func TestList(t *testing.T) {
 		firstPaymentDate, lastPaymentDate time.Time
 	}
 	type want struct {
-		err     error
+		err     errpkg.ErrCode
 		invoice []*models.Invoice
 	}
 	tests := []struct {
@@ -222,6 +291,42 @@ func TestList(t *testing.T) {
 				},
 			},
 		},
+		{
+			descrition: "Repository.ListからErrNotFoundが返ってきた場合",
+			args: args{
+				companyGUID:      "company_guid",
+				firstPaymentDate: time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+				lastPaymentDate:  time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC),
+			},
+			setup: func(repo *mock_repository.MockInvoiceRepository) {
+				repo.EXPECT().List(gomock.Any(),
+					"company_guid",
+					time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+					time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC),
+				).Return(nil, errpkg.NewNotFoundError(errors.New("not found")))
+			},
+			want: want{
+				err: errpkg.ErrNotFound,
+			},
+		},
+		{
+			descrition: "Repository.ListからErrInternalが返ってきた場合",
+			args: args{
+				companyGUID:      "company_guid",
+				firstPaymentDate: time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+				lastPaymentDate:  time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC),
+			},
+			setup: func(repo *mock_repository.MockInvoiceRepository) {
+				repo.EXPECT().List(gomock.Any(),
+					"company_guid",
+					time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+					time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC),
+				).Return(nil, errpkg.NewInternalError(errors.New("internal")))
+			},
+			want: want{
+				err: errpkg.ErrInternal,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.descrition, func(t *testing.T) {
@@ -235,7 +340,11 @@ func TestList(t *testing.T) {
 			uc := invoice_usecase.NewInvoiceUsecase(nil, repo)
 			res, err := uc.List(context.Background(), tt.args.companyGUID, tt.args.firstPaymentDate, tt.args.lastPaymentDate)
 			if err != nil {
-				assert.Equal(t, tt.want.err, err)
+				serverError, ok := err.(*errpkg.ServerError)
+				if !ok {
+					t.FailNow()
+				}
+				assert.Equal(t, tt.want.err, serverError.ErrCode)
 			}
 			assert.Equal(t, tt.want.invoice, res)
 		})
