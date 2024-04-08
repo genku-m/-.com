@@ -48,3 +48,7 @@ func (i *invoiceUsecase) Create(ctx context.Context, companyGUID, customerGUID s
 
 	return invoiceModel, nil
 }
+
+func (i *invoiceUsecase) List(ctx context.Context, companyGUID string, firstPaymentDate, lastPaymentDate time.Time) ([]*models.Invoice, error) {
+	return i.InvoiceRepository.List(ctx, companyGUID, firstPaymentDate, lastPaymentDate)
+}
