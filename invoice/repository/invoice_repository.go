@@ -43,8 +43,8 @@ type Invoice struct {
 }
 
 type InvoiceWithCustomerGUID struct {
-	Invoice
-	CustomerGUID string `db:"guid"`
+	Invoice      `db:"invoice"`
+	CustomerGUID string `db:"company.guid"`
 }
 
 func (r *InvoiceRepository) Create(ctx context.Context, invoice *models.Invoice) error {
@@ -98,7 +98,7 @@ func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstP
 		switch {
 		case err == sql.ErrNoRows:
 			return nil, fmt.Errorf("customer not found: %v", companyGUID)
-		case err != nil:
+		default:
 			return nil, err
 		}
 	}
@@ -108,12 +108,30 @@ func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstP
 	SELECT invoice.*, customer.guid FROM 
 	invoice
 	JOIN customer ON invoice.customer_id = customer.id
-	WHERE company_id IN  AND payment_date BETWEEN ? AND ?`, companyGUID, firstPaymentDate, lastPaymentDate)
+	WHERE ? AND payment_date BETWEEN ? AND ?`, companyGUID, firstPaymentDate, lastPaymentDate)
+	if err != nil {
+		return nil, err
+	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var invoice InvoiceWithCustomerGUID
-		if err := rows.Scan(&invoice); err != nil {
+		if err := rows.Scan(
+			&invoice.Invoice.ID,
+			&invoice.Invoice.GUID,
+			&invoice.Invoice.CompanyID,
+			&invoice.Invoice.CustomerID,
+			&invoice.Invoice.PublishDate,
+			&invoice.Invoice.Payment,
+			&invoice.Invoice.CommissionTax,
+			&invoice.Invoice.CommissionTaxRate,
+			&invoice.Invoice.ConsumptionTax,
+			&invoice.Invoice.TaxRate,
+			&invoice.Invoice.BillingAmount,
+			&invoice.Invoice.PaymentDate,
+			&invoice.Invoice.Status,
+			&invoice.CustomerGUID,
+		); err != nil {
 			return nil, err
 		}
 		invoices = append(invoices, invoice)

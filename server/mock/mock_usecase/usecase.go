@@ -50,3 +50,18 @@ func (mr *MockInvoiceUsecaseMockRecorder) Create(ctx, companyGUID, CustomerGUID,
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockInvoiceUsecase)(nil).Create), ctx, companyGUID, CustomerGUID, publishDate, payment, commissionTaxRate, taxRate, paymentDate)
 }
+
+// List mocks base method.
+func (m *MockInvoiceUsecase) List(ctx context.Context, companyGUID string, firstPaymentDate, lastPaymentDate time.Time) ([]*models.Invoice, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx, companyGUID, firstPaymentDate, lastPaymentDate)
+	ret0, _ := ret[0].([]*models.Invoice)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List.
+func (mr *MockInvoiceUsecaseMockRecorder) List(ctx, companyGUID, firstPaymentDate, lastPaymentDate interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockInvoiceUsecase)(nil).List), ctx, companyGUID, firstPaymentDate, lastPaymentDate)
+}
