@@ -6,7 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ServerConfig struct{}
+type ServerConfig struct {
+}
 
 type Server struct {
 	invoiceUsecase InvoiceUsecase

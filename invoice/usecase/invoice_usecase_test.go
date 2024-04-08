@@ -47,7 +47,7 @@ func TestCreate(t *testing.T) {
 				paymentDate:       PaymentDate,
 			},
 			setup: func(mockGuid *mock_guid.MockGuid, repo *mock_repository.MockInvoiceRepository) {
-				mockGuid.EXPECT().New().Return("guid")
+				mockGuid.EXPECT().Generate().Return("guid")
 				repo.EXPECT().Create(gomock.Any(), &models.Invoice{
 					GUID:              "guid",
 					CompanyGUID:       "company_guid",
