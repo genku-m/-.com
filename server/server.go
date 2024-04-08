@@ -38,7 +38,12 @@ func (s *Server) Listen() error {
 	})
 
 	router.GET("/api/invoices", func(c *gin.Context) {
-		c.String(http.StatusOK, "")
+		res, err := s.ListInvoice(c)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		c.JSON(http.StatusOK, res)
 	})
 
 	router.GET("/health", func(c *gin.Context) {
