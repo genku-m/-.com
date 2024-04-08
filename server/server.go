@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,24 +32,41 @@ func (s *Server) Listen() error {
 	router.POST("/api/invoices", func(ctx *gin.Context) {
 		res, err := s.CreateInvoice(ctx)
 		if err != nil {
-			ctx.String(http.StatusInternalServerError, err.Error())
+			errHundler(ctx, err)
 			return
 		}
 		ctx.JSON(http.StatusOK, res)
 	})
 
-	router.GET("/api/invoices", func(c *gin.Context) {
-		res, err := s.ListInvoice(c)
+	router.GET("/api/invoices", func(ctx *gin.Context) {
+		res, err := s.ListInvoice(ctx)
 		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+			errHundler(ctx, err)
 			return
 		}
-		c.JSON(http.StatusOK, res)
+		ctx.JSON(http.StatusOK, res)
 	})
 
-	router.GET("/health", func(c *gin.Context) {
-		c.String(http.StatusOK, "")
+	router.GET("/health", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "")
 	})
 
 	return router.Run()
+}
+
+func errHundler(ctx *gin.Context, err error) {
+	serverError, ok := err.(*errpkg.ServerError)
+	if !ok {
+		ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	switch serverError.ErrCode {
+	case errpkg.ErrInvalidArgument:
+		ctx.String(http.StatusBadRequest, err.Error())
+	case errpkg.ErrNotFound:
+		ctx.String(http.StatusNotFound, err.Error())
+	case errpkg.ErrInternal:
+		ctx.String(http.StatusInternalServerError, err.Error())
+	default:
+		ctx.String(http.StatusInternalServerError, err.Error())
+	}
 }
