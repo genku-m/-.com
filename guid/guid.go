@@ -4,6 +4,10 @@ import "github.com/rs/xid"
 
 type Guid struct{}
 
-func (g *Guid) New() string {
+func New() *Guid {
+	return &Guid{}
+}
+
+func (g *Guid) Generate() string {
 	return xid.New().String()
 }

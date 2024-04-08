@@ -54,7 +54,7 @@ func (r *InvoiceRepository) Create(ctx context.Context, invoice *models.Invoice)
 		switch {
 		case err == sql.ErrNoRows:
 			return fmt.Errorf("customer not found: %v", invoice.CustomerGUID)
-		case err != nil:
+		default:
 			return err
 		}
 	}
@@ -62,7 +62,7 @@ func (r *InvoiceRepository) Create(ctx context.Context, invoice *models.Invoice)
 	_, err = r.db.ExecContext(ctx, `INSERT INTO invoice (
 		guid,
 		company_id,
-		coustomer_id,
+		customer_id,
 		publish_date,
 		payment,
 		commission_tax,
@@ -72,7 +72,7 @@ func (r *InvoiceRepository) Create(ctx context.Context, invoice *models.Invoice)
 		billing_amount,
 		payment_date,
 		status
-		) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
 		invoice.GUID,
 		companyID,
 		customerID,
@@ -91,7 +91,7 @@ func (r *InvoiceRepository) Create(ctx context.Context, invoice *models.Invoice)
 	return nil
 }
 
-func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstPaymentDate, lastPaymentDate time.Time) ([]models.Invoice, error) {
+func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstPaymentDate, lastPaymentDate time.Time) ([]*models.Invoice, error) {
 	var companyID uint32
 	err := r.db.QueryRowContext(ctx, "SELECT id FROM company WHERE guid=?", companyGUID).Scan(&companyID)
 	if err != nil {
@@ -132,14 +132,14 @@ func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstP
 		return nil, err
 	}
 
-	invoiceModels := make([]models.Invoice, 0, len(invoices))
+	invoiceModels := make([]*models.Invoice, 0, len(invoices))
 	for _, invoice := range invoices {
 		status, err := toModelsStatus(invoice.Status)
 		if err != nil {
 			return nil, err
 		}
 
-		invoiceModels = append(invoiceModels, models.Invoice{
+		invoiceModels = append(invoiceModels, &models.Invoice{
 			GUID:              invoice.GUID,
 			CompanyGUID:       companyGUID,
 			CustomerGUID:      invoice.CustomerGUID,

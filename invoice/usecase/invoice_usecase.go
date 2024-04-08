@@ -28,7 +28,7 @@ func (i *invoiceUsecase) Create(ctx context.Context, companyGUID, customerGUID s
 	consumptionTax := commissionTax.Mul(taxRateDecimal)
 	billingAmount := paymentDecimal.Add(commissionTax).Add(consumptionTax)
 	invoiceModel := &models.Invoice{
-		GUID:              i.Guid.New(),
+		GUID:              i.Guid.Generate(),
 		CompanyGUID:       companyGUID,
 		CustomerGUID:      customerGUID,
 		PublishDate:       publishDate,

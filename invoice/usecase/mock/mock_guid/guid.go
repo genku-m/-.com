@@ -33,16 +33,16 @@ func (m *MockGuid) EXPECT() *MockGuidMockRecorder {
 	return m.recorder
 }
 
-// New mocks base method.
-func (m *MockGuid) New() string {
+// Generate mocks base method.
+func (m *MockGuid) Generate() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "New")
+	ret := m.ctrl.Call(m, "Generate")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// New indicates an expected call of New.
-func (mr *MockGuidMockRecorder) New() *gomock.Call {
+// Generate indicates an expected call of Generate.
+func (mr *MockGuidMockRecorder) Generate() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "New", reflect.TypeOf((*MockGuid)(nil).New))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockGuid)(nil).Generate))
 }

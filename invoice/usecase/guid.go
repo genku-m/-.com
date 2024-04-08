@@ -2,5 +2,5 @@
 package invoice_usecase
 
 type Guid interface {
-	New() string
+	Generate() string
 }

@@ -10,5 +10,6 @@ import (
 
 type InvoiceUsecase interface {
 	Create(ctx context.Context, companyGUID, CustomerGUID string, publishDate time.Time, payment uint64, commissionTaxRate float64, taxRate float64, paymentDate time.Time) (*models.Invoice, error)
-	List(ctx context.Context, companyGUID string, firstPaymentDate, lastPaymentDate time.Time) ([]*models.Invoice, error)
+	// 未実装なのでコメントアウト
+	// List(ctx context.Context, companyGUID string, firstPaymentDate, lastPaymentDate time.Time) ([]*models.Invoice, error)
 }
