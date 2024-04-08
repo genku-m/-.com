@@ -28,6 +28,7 @@ type InvoiceResponse struct {
 	TaxRate           float64   `json:"tax_rate" binding:"required"`
 	BillingAmount     uint64    `json:"billing_amount" binding:"required"`
 	PaymentDate       time.Time `json:"payment_date" binding:"required"`
+	Status            string    `json:"status" binding:"required"`
 }
 
 func (s *Server) CreateInvoice(ctx *gin.Context) (*InvoiceResponse, error) {
@@ -53,5 +54,44 @@ func (s *Server) CreateInvoice(ctx *gin.Context) (*InvoiceResponse, error) {
 		TaxRate:           invoice.TaxRate,
 		BillingAmount:     invoice.BillingAmount,
 		PaymentDate:       invoice.PaymentDate,
+		Status:            string(invoice.Status),
 	}, nil
+}
+
+type ListInvoiceRequest struct {
+	CompanyGUID      string    `json:"company_guid" binding:"required"`
+	FirstPaymentDate time.Time `json:"first_payment_date" binding:"required"`
+	LastPaymentDate  time.Time `json:"last_payment_date" binding:"required"`
+}
+
+func (s *Server) ListInvoice(ctx *gin.Context) ([]*InvoiceResponse, error) {
+	var lir ListInvoiceRequest
+	if err := ctx.ShouldBindJSON(&lir); err != nil {
+		return nil, err
+	}
+
+	invoices, err := s.invoiceUsecase.List(ctx, lir.CompanyGUID, lir.FirstPaymentDate, lir.LastPaymentDate)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []*InvoiceResponse
+	for _, invoice := range invoices {
+		res = append(res, &InvoiceResponse{
+			GUID:              invoice.GUID,
+			CompanyGUID:       invoice.CompanyGUID,
+			CustomerGUID:      invoice.CustomerGUID,
+			PublishDate:       invoice.PublishDate,
+			Payment:           invoice.Payment,
+			CommissionTax:     invoice.CommissionTax,
+			CommissionTaxRate: invoice.CommissionTaxRate,
+			ConsumptionTax:    invoice.ConsumptionTax,
+			TaxRate:           invoice.TaxRate,
+			BillingAmount:     invoice.BillingAmount,
+			PaymentDate:       invoice.PaymentDate,
+			Status:            string(invoice.Status),
+		})
+	}
+
+	return res, nil
 }
