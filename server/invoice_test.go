@@ -2,11 +2,13 @@ package server_test
 
 import (
 	"bytes"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
 	"github.com/genku-m/upsider-cording-test/models"
 	"github.com/genku-m/upsider-cording-test/server"
 	"github.com/genku-m/upsider-cording-test/server/mock/mock_usecase"
@@ -18,7 +20,7 @@ import (
 func TestCreateInvoice(t *testing.T) {
 	type want struct {
 		res *server.InvoiceResponse
-		err error
+		err errpkg.ErrCode
 	}
 
 	tests := []struct {
@@ -78,6 +80,45 @@ func TestCreateInvoice(t *testing.T) {
 				},
 			},
 		},
+		{
+			description: "不正なリクエスト",
+			args: func() *gin.Context {
+				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
+				body := bytes.NewBufferString("{\"invalid\": \"invalid\"}")
+				req, _ := http.NewRequest("POST", "/api/invoices", body)
+				ginContext.Request = req
+				return ginContext
+			}(),
+			setup: func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase) {},
+			want: want{
+				err: errpkg.ErrInvalidArgument,
+			},
+		},
+		{
+			description: "Usecase.Createでエラー",
+			args: func() *gin.Context {
+				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
+				body := bytes.NewBufferString("{\"company_guid\": \"company_guid\",\"customer_guid\": \"customer_guid\",\"publish_date\": \"2024-04-01T00:00:00Z\",\"payment\": 10000,\"commission_tax_rate\": 0.04,\"tax_rate\": 0.1,\"payment_date\": \"2024-04-05T00:00:00Z\"}")
+				req, _ := http.NewRequest("POST", "/api/invoices", body)
+				ginContext.Request = req
+				return ginContext
+			}(),
+			setup: func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase) {
+				mockInvoiceUsecase.EXPECT().Create(
+					gomock.Any(),
+					"company_guid",
+					"customer_guid",
+					time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+					uint64(10000),
+					0.04,
+					0.10,
+					time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC),
+				).Return(nil, errpkg.NewInternalError(errors.New("internal")))
+			},
+			want: want{
+				err: errpkg.ErrInternal,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
@@ -89,7 +130,11 @@ func TestCreateInvoice(t *testing.T) {
 			server := server.NewServer(mockInvoiceUsecase, &server.ServerConfig{})
 			res, err := server.CreateInvoice(tt.args)
 			if err != nil {
-				assert.Equal(t, tt.want.err, err)
+				serverError, ok := err.(*errpkg.ServerError)
+				if !ok {
+					t.FailNow()
+				}
+				assert.Equal(t, tt.want.err, serverError.ErrCode)
 			}
 			assert.Equal(t, tt.want.res, res)
 		})
@@ -99,7 +144,7 @@ func TestCreateInvoice(t *testing.T) {
 func TestListInvoice(t *testing.T) {
 	type want struct {
 		res []*server.InvoiceResponse
-		err error
+		err errpkg.ErrCode
 	}
 
 	tests := []struct {
@@ -215,6 +260,41 @@ func TestListInvoice(t *testing.T) {
 				},
 			},
 		},
+		{
+			description: "不正なリクエスト",
+			args: func() *gin.Context {
+				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
+				body := bytes.NewBufferString("{\"invalid\": \"invalid\"}")
+				req, _ := http.NewRequest("GET", "/api/invoices", body)
+				ginContext.Request = req
+				return ginContext
+			}(),
+			setup: func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase) {},
+			want: want{
+				err: errpkg.ErrInvalidArgument,
+			},
+		},
+		{
+			description: "Usecase.Listからエラーが返ってくる",
+			args: func() *gin.Context {
+				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
+				body := bytes.NewBufferString("{\"company_guid\": \"company_guid\",\"first_payment_date\": \"2024-04-01T00:00:00Z\",\"last_payment_date\": \"2024-04-05T00:00:00Z\"}")
+				req, _ := http.NewRequest("GET", "/api/invoices", body)
+				ginContext.Request = req
+				return ginContext
+			}(),
+			setup: func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase) {
+				mockInvoiceUsecase.EXPECT().List(
+					gomock.Any(),
+					"company_guid",
+					time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC),
+					time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC),
+				).Return(nil, errpkg.NewInternalError(errors.New("internal")))
+			},
+			want: want{
+				err: errpkg.ErrInternal,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
@@ -226,7 +306,11 @@ func TestListInvoice(t *testing.T) {
 			server := server.NewServer(mockInvoiceUsecase, &server.ServerConfig{})
 			res, err := server.ListInvoice(tt.args)
 			if err != nil {
-				assert.Equal(t, tt.want.err, err)
+				serverError, ok := err.(*errpkg.ServerError)
+				if !ok {
+					t.FailNow()
+				}
+				assert.Equal(t, tt.want.err, serverError.ErrCode)
 			}
 			assert.Equal(t, tt.want.res, res)
 		})

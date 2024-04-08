@@ -3,6 +3,7 @@ package server
 import (
 	"time"
 
+	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,7 +35,7 @@ type InvoiceResponse struct {
 func (s *Server) CreateInvoice(ctx *gin.Context) (*InvoiceResponse, error) {
 	var cir CreateInvoiceRequest
 	if err := ctx.ShouldBindJSON(&cir); err != nil {
-		return nil, err
+		return nil, errpkg.NewInvalidArgumentError(err)
 	}
 
 	invoice, err := s.invoiceUsecase.Create(ctx, cir.CompanyGUID, cir.CustomerGUID, cir.PublishDate, cir.Payment, cir.CommissionTaxRate, cir.TaxRate, cir.PaymentDate)
@@ -67,7 +68,7 @@ type ListInvoiceRequest struct {
 func (s *Server) ListInvoice(ctx *gin.Context) ([]*InvoiceResponse, error) {
 	var lir ListInvoiceRequest
 	if err := ctx.ShouldBindJSON(&lir); err != nil {
-		return nil, err
+		return nil, errpkg.NewInvalidArgumentError(err)
 	}
 
 	invoices, err := s.invoiceUsecase.List(ctx, lir.CompanyGUID, lir.FirstPaymentDate, lir.LastPaymentDate)
