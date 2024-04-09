@@ -21,7 +21,9 @@ initに入ってるCreate Table等をコピーしてテーブル作成
 go run main.go
 ```
 - ユーザーログインをする
+  
 事前に用意したユーザーを使用します
+
 ここではcurlを利用した例を挙げます
 ```
 curl -c cookie.txt -X POST -H "Content-Type: application/json" -d '{"email":"test@example.com","password":"password"}' localhost:8080/login
