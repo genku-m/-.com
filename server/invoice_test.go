@@ -180,8 +180,7 @@ func TestListInvoice(t *testing.T) {
 			description: "正常系",
 			args: func() args {
 				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
-				body := bytes.NewBufferString("{\"company_guid\": \"company_guid\",\"first_payment_date\": \"2024-04-01T00:00:00Z\",\"last_payment_date\": \"2024-04-05T00:00:00Z\"}")
-				req, _ := http.NewRequest("GET", "/api/invoices", body)
+				req, _ := http.NewRequest("GET", "/api/invoices?first_payment_date=2024-04-01T00:00:00Z&last_payment_date=2024-04-05T00:00:00Z", nil)
 				ginContext.Request = req
 				return args{
 					ginContext,
@@ -290,8 +289,7 @@ func TestListInvoice(t *testing.T) {
 			description: "不正なリクエスト",
 			args: func() args {
 				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
-				body := bytes.NewBufferString("{\"invalid\": \"invalid\"}")
-				req, _ := http.NewRequest("GET", "/api/invoices", body)
+				req, _ := http.NewRequest("GET", "/api/invoices?invalid=invalid", nil)
 				ginContext.Request = req
 				return args{
 					ginContext,
@@ -307,8 +305,7 @@ func TestListInvoice(t *testing.T) {
 			description: "Usecase.Listからエラーが返ってくる",
 			args: func() args {
 				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
-				body := bytes.NewBufferString("{\"company_guid\": \"company_guid\",\"first_payment_date\": \"2024-04-01T00:00:00Z\",\"last_payment_date\": \"2024-04-05T00:00:00Z\"}")
-				req, _ := http.NewRequest("GET", "/api/invoices", body)
+				req, _ := http.NewRequest("GET", "/api/invoices?first_payment_date=2024-04-01T00:00:00Z&last_payment_date=2024-04-05T00:00:00Z", nil)
 				ginContext.Request = req
 				return args{
 					ginContext,

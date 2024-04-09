@@ -71,16 +71,18 @@ type ListInvoiceRequest struct {
 }
 
 func (s *Server) ListInvoice(ctx *gin.Context, loginInfo *models.LoginInfo) ([]*InvoiceResponse, error) {
-	var lir ListInvoiceRequest
-	if err := ctx.ShouldBindJSON(&lir); err != nil {
+	firstPaymentDateString := ctx.Query("first_payment_date")
+	lastPaymentDateString := ctx.Query("last_payment_date")
+	firstPaymentDate, err := time.Parse(time.RFC3339, firstPaymentDateString)
+	if err != nil {
+		return nil, errpkg.NewInvalidArgumentError(err)
+	}
+	lastPaymentDate, err := time.Parse(time.RFC3339, lastPaymentDateString)
+	if err != nil {
 		return nil, errpkg.NewInvalidArgumentError(err)
 	}
 
-	if loginInfo.CompanyGUID != lir.CompanyGUID {
-		return nil, errpkg.NewInvalidArgumentError(fmt.Errorf("company_guid is invalid: %v", lir.CompanyGUID))
-	}
-
-	invoices, err := s.invoiceUsecase.List(ctx, lir.CompanyGUID, lir.FirstPaymentDate, lir.LastPaymentDate)
+	invoices, err := s.invoiceUsecase.List(ctx, loginInfo.CompanyGUID, firstPaymentDate, lastPaymentDate)
 	if err != nil {
 		return nil, err
 	}
