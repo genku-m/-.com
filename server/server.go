@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/genku-m/upsider-cording-test/auth"
 	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
+	"github.com/genku-m/upsider-cording-test/models"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -58,7 +60,12 @@ func (s *Server) Listen() error {
 	})
 
 	router.POST("/api/invoices", func(ctx *gin.Context) {
-		res, err := s.CreateInvoice(ctx)
+		loginInfo, err := CheckLogin(ctx)
+		if err != nil {
+			errHundler(ctx, err)
+			return
+		}
+		res, err := s.CreateInvoice(ctx, loginInfo)
 		if err != nil {
 			errHundler(ctx, err)
 			return
@@ -67,7 +74,12 @@ func (s *Server) Listen() error {
 	})
 
 	router.GET("/api/invoices", func(ctx *gin.Context) {
-		res, err := s.ListInvoice(ctx)
+		loginInfo, err := CheckLogin(ctx)
+		if err != nil {
+			errHundler(ctx, err)
+			return
+		}
+		res, err := s.ListInvoice(ctx, loginInfo)
 		if err != nil {
 			errHundler(ctx, err)
 			return
@@ -91,9 +103,19 @@ func errHundler(ctx *gin.Context, err error) {
 		ctx.String(http.StatusBadRequest, err.Error())
 	case errpkg.ErrNotFound:
 		ctx.String(http.StatusNotFound, err.Error())
+	case errpkg.ErrUnauthorized:
+		ctx.String(http.StatusUnauthorized, err.Error())
 	case errpkg.ErrInternal:
 		ctx.String(http.StatusInternalServerError, err.Error())
 	default:
 		ctx.String(http.StatusInternalServerError, err.Error())
 	}
+}
+
+func CheckLogin(ctx *gin.Context) (*models.LoginInfo, error) {
+	loginInfo, err := auth.LoginCheck(ctx)
+	if err != nil {
+		return nil, errpkg.NewUnauthorizedError(err)
+	}
+	return loginInfo, nil
 }

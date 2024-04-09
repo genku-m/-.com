@@ -34,12 +34,11 @@ func (u *AuthUsecase) Login(ctx *gin.Context, email, password string) error {
 			GUID:        user.GUID,
 			CompanyGUID: user.CompanyGUID,
 		})
-		if err == nil {
-			session.Set("loginUser", string(loginUser))
-			session.Save()
-		} else {
+		if err != nil {
 			return err
 		}
+		session.Set("loginUser", string(loginUser))
+		session.Save()
 	}
 
 	return nil
