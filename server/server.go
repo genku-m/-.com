@@ -3,7 +3,6 @@ package server
 import (
 	"net/http"
 
-	"github.com/genku-m/upsider-cording-test/auth"
 	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -42,27 +41,24 @@ func (s *Server) Listen() error {
 			ctx.String(http.StatusUnauthorized, err.Error())
 		}
 	})
-	authUserGroup := router.Group("/auth")
-	authUserGroup.Use(auth.LoginCheckMiddleware())
-	{
-		router.POST("/api/invoices", func(ctx *gin.Context) {
-			res, err := s.CreateInvoice(ctx)
-			if err != nil {
-				errHundler(ctx, err)
-				return
-			}
-			ctx.JSON(http.StatusOK, res)
-		})
 
-		router.GET("/api/invoices", func(ctx *gin.Context) {
-			res, err := s.ListInvoice(ctx)
-			if err != nil {
-				errHundler(ctx, err)
-				return
-			}
-			ctx.JSON(http.StatusOK, res)
-		})
-	}
+	router.POST("/api/invoices", func(ctx *gin.Context) {
+		res, err := s.CreateInvoice(ctx)
+		if err != nil {
+			errHundler(ctx, err)
+			return
+		}
+		ctx.JSON(http.StatusOK, res)
+	})
+
+	router.GET("/api/invoices", func(ctx *gin.Context) {
+		res, err := s.ListInvoice(ctx)
+		if err != nil {
+			errHundler(ctx, err)
+			return
+		}
+		ctx.JSON(http.StatusOK, res)
+	})
 	router.GET("/health", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "")
 	})

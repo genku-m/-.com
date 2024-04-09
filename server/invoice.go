@@ -1,15 +1,12 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/genku-m/upsider-cording-test/auth"
 	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
-	"github.com/genku-m/upsider-cording-test/models"
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/koron/go-dproxy"
 )
 
 type CreateInvoiceRequest struct {
@@ -38,9 +35,18 @@ type InvoiceResponse struct {
 }
 
 func (s *Server) CreateInvoice(ctx *gin.Context) (*InvoiceResponse, error) {
+	// session check
+	loginInfo, err := auth.LoginCheck(ctx)
+	if err != nil {
+		return nil, errpkg.NewUnauthorizedError(err)
+	}
+
 	var cir CreateInvoiceRequest
 	if err := ctx.ShouldBindJSON(&cir); err != nil {
 		return nil, errpkg.NewInvalidArgumentError(err)
+	}
+	if loginInfo.CompanyGUID != cir.CompanyGUID {
+		return nil, errpkg.NewInvalidArgumentError(fmt.Errorf("company_guid is invalid: %v", cir.CompanyGUID))
 	}
 
 	invoice, err := s.invoiceUsecase.Create(ctx, cir.CompanyGUID, cir.CustomerGUID, cir.PublishDate, cir.Payment, cir.CommissionTaxRate, cir.TaxRate, cir.PaymentDate)
@@ -71,24 +77,18 @@ type ListInvoiceRequest struct {
 }
 
 func (s *Server) ListInvoice(ctx *gin.Context) ([]*InvoiceResponse, error) {
+	// session check
+	loginInfo, err := auth.LoginCheck(ctx)
+	if err != nil {
+		return nil, errpkg.NewUnauthorizedError(err)
+	}
+
 	var lir ListInvoiceRequest
 	if err := ctx.ShouldBindJSON(&lir); err != nil {
 		return nil, errpkg.NewInvalidArgumentError(err)
 	}
 
-	session := sessions.Default(ctx)
-	loginUserJson, err := dproxy.New(session.Get("loginUser")).String()
-	if err != nil {
-		return nil, errpkg.NewInternalError(err)
-	}
-	var loginInfo models.LoginInfo
-	err = json.Unmarshal([]byte(loginUserJson), &loginInfo)
-	if err != nil {
-		return nil, errpkg.NewInternalError(err)
-	}
-
 	if loginInfo.CompanyGUID != lir.CompanyGUID {
-		fmt.Println("loginInfo.CompanyGUID", loginInfo.CompanyGUID)
 		return nil, errpkg.NewInvalidArgumentError(fmt.Errorf("company_guid is invalid: %v", lir.CompanyGUID))
 	}
 
