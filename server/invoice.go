@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/genku-m/upsider-cording-test/auth"
 	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
+	"github.com/genku-m/upsider-cording-test/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,13 +34,7 @@ type InvoiceResponse struct {
 	Status            string    `json:"status" binding:"required"`
 }
 
-func (s *Server) CreateInvoice(ctx *gin.Context) (*InvoiceResponse, error) {
-	// session check
-	loginInfo, err := auth.LoginCheck(ctx)
-	if err != nil {
-		return nil, errpkg.NewUnauthorizedError(err)
-	}
-
+func (s *Server) CreateInvoice(ctx *gin.Context, loginInfo *models.LoginInfo) (*InvoiceResponse, error) {
 	var cir CreateInvoiceRequest
 	if err := ctx.ShouldBindJSON(&cir); err != nil {
 		return nil, errpkg.NewInvalidArgumentError(err)
@@ -76,13 +70,7 @@ type ListInvoiceRequest struct {
 	LastPaymentDate  time.Time `json:"last_payment_date" binding:"required"`
 }
 
-func (s *Server) ListInvoice(ctx *gin.Context) ([]*InvoiceResponse, error) {
-	// session check
-	loginInfo, err := auth.LoginCheck(ctx)
-	if err != nil {
-		return nil, errpkg.NewUnauthorizedError(err)
-	}
-
+func (s *Server) ListInvoice(ctx *gin.Context, loginInfo *models.LoginInfo) ([]*InvoiceResponse, error) {
 	var lir ListInvoiceRequest
 	if err := ctx.ShouldBindJSON(&lir); err != nil {
 		return nil, errpkg.NewInvalidArgumentError(err)

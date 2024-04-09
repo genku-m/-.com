@@ -17,26 +17,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var testLoginInfo = &models.LoginInfo{
+	GUID:        "guid",
+	CompanyGUID: "company_guid",
+}
+
 func TestCreateInvoice(t *testing.T) {
 	type want struct {
 		res *server.InvoiceResponse
 		err errpkg.ErrCode
 	}
 
+	type args struct {
+		ctx       *gin.Context
+		loginInfo *models.LoginInfo
+	}
+
 	tests := []struct {
 		description string
-		args        *gin.Context
+		args        args
 		setup       func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase)
 		want        want
 	}{
 		{
 			description: "正常系",
-			args: func() *gin.Context {
+			args: func() args {
 				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
 				body := bytes.NewBufferString("{\"company_guid\": \"company_guid\",\"customer_guid\": \"customer_guid\",\"publish_date\": \"2024-04-01T00:00:00Z\",\"payment\": 10000,\"commission_tax_rate\": 0.04,\"tax_rate\": 0.1,\"payment_date\": \"2024-04-05T00:00:00Z\"}")
 				req, _ := http.NewRequest("POST", "/api/invoices", body)
 				ginContext.Request = req
-				return ginContext
+				return args{
+					ginContext,
+					testLoginInfo,
+				}
 			}(),
 			setup: func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase) {
 				mockInvoiceUsecase.EXPECT().Create(
@@ -82,12 +95,15 @@ func TestCreateInvoice(t *testing.T) {
 		},
 		{
 			description: "不正なリクエスト",
-			args: func() *gin.Context {
+			args: func() args {
 				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
 				body := bytes.NewBufferString("{\"invalid\": \"invalid\"}")
 				req, _ := http.NewRequest("POST", "/api/invoices", body)
 				ginContext.Request = req
-				return ginContext
+				return args{
+					ginContext,
+					testLoginInfo,
+				}
 			}(),
 			setup: func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase) {},
 			want: want{
@@ -96,12 +112,15 @@ func TestCreateInvoice(t *testing.T) {
 		},
 		{
 			description: "Usecase.Createでエラー",
-			args: func() *gin.Context {
+			args: func() args {
 				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
 				body := bytes.NewBufferString("{\"company_guid\": \"company_guid\",\"customer_guid\": \"customer_guid\",\"publish_date\": \"2024-04-01T00:00:00Z\",\"payment\": 10000,\"commission_tax_rate\": 0.04,\"tax_rate\": 0.1,\"payment_date\": \"2024-04-05T00:00:00Z\"}")
 				req, _ := http.NewRequest("POST", "/api/invoices", body)
 				ginContext.Request = req
-				return ginContext
+				return args{
+					ginContext,
+					testLoginInfo,
+				}
 			}(),
 			setup: func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase) {
 				mockInvoiceUsecase.EXPECT().Create(
@@ -127,8 +146,8 @@ func TestCreateInvoice(t *testing.T) {
 
 			mockInvoiceUsecase := mock_usecase.NewMockInvoiceUsecase(ctrl)
 			tt.setup(mockInvoiceUsecase)
-			server := server.NewServer(mockInvoiceUsecase, &server.ServerConfig{})
-			res, err := server.CreateInvoice(tt.args)
+			server := server.NewServer(mockInvoiceUsecase, nil, &server.ServerConfig{})
+			res, err := server.CreateInvoice(tt.args.ctx, tt.args.loginInfo)
 			if err != nil {
 				serverError, ok := err.(*errpkg.ServerError)
 				if !ok {
@@ -147,20 +166,27 @@ func TestListInvoice(t *testing.T) {
 		err errpkg.ErrCode
 	}
 
+	type args struct {
+		ctx       *gin.Context
+		loginInfo *models.LoginInfo
+	}
 	tests := []struct {
 		description string
-		args        *gin.Context
+		args        args
 		setup       func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase)
 		want        want
 	}{
 		{
 			description: "正常系",
-			args: func() *gin.Context {
+			args: func() args {
 				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
 				body := bytes.NewBufferString("{\"company_guid\": \"company_guid\",\"first_payment_date\": \"2024-04-01T00:00:00Z\",\"last_payment_date\": \"2024-04-05T00:00:00Z\"}")
 				req, _ := http.NewRequest("GET", "/api/invoices", body)
 				ginContext.Request = req
-				return ginContext
+				return args{
+					ginContext,
+					testLoginInfo,
+				}
 			}(),
 			setup: func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase) {
 				mockInvoiceUsecase.EXPECT().List(
@@ -262,12 +288,15 @@ func TestListInvoice(t *testing.T) {
 		},
 		{
 			description: "不正なリクエスト",
-			args: func() *gin.Context {
+			args: func() args {
 				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
 				body := bytes.NewBufferString("{\"invalid\": \"invalid\"}")
 				req, _ := http.NewRequest("GET", "/api/invoices", body)
 				ginContext.Request = req
-				return ginContext
+				return args{
+					ginContext,
+					testLoginInfo,
+				}
 			}(),
 			setup: func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase) {},
 			want: want{
@@ -276,12 +305,15 @@ func TestListInvoice(t *testing.T) {
 		},
 		{
 			description: "Usecase.Listからエラーが返ってくる",
-			args: func() *gin.Context {
+			args: func() args {
 				ginContext, _ := gin.CreateTestContext(httptest.NewRecorder())
 				body := bytes.NewBufferString("{\"company_guid\": \"company_guid\",\"first_payment_date\": \"2024-04-01T00:00:00Z\",\"last_payment_date\": \"2024-04-05T00:00:00Z\"}")
 				req, _ := http.NewRequest("GET", "/api/invoices", body)
 				ginContext.Request = req
-				return ginContext
+				return args{
+					ginContext,
+					testLoginInfo,
+				}
 			}(),
 			setup: func(mockInvoiceUsecase *mock_usecase.MockInvoiceUsecase) {
 				mockInvoiceUsecase.EXPECT().List(
@@ -303,8 +335,8 @@ func TestListInvoice(t *testing.T) {
 
 			mockInvoiceUsecase := mock_usecase.NewMockInvoiceUsecase(ctrl)
 			tt.setup(mockInvoiceUsecase)
-			server := server.NewServer(mockInvoiceUsecase, &server.ServerConfig{})
-			res, err := server.ListInvoice(tt.args)
+			server := server.NewServer(mockInvoiceUsecase, nil, &server.ServerConfig{})
+			res, err := server.ListInvoice(tt.args.ctx, tt.args.loginInfo)
 			if err != nil {
 				serverError, ok := err.(*errpkg.ServerError)
 				if !ok {
