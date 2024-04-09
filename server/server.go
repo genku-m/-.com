@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"os"
 
 	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
 	"github.com/gin-contrib/sessions"
@@ -9,7 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type DB struct {
+	Name     string
+	User     string
+	Password string
+	Address  string
+}
 type ServerConfig struct {
+	DB *DB
 }
 
 type Server struct {
@@ -19,7 +27,14 @@ type Server struct {
 }
 
 func NewConfig() *ServerConfig {
-	return &ServerConfig{}
+	return &ServerConfig{
+		DB: &DB{
+			Name:     os.Getenv("DB_NAME"),
+			User:     os.Getenv("DB_USER"),
+			Password: os.Getenv("DB_PASSWORD"),
+			Address:  os.Getenv("DB_ADDRESS"),
+		},
+	}
 }
 
 func NewServer(invoiceUsecase InvoiceUsecase, authUsecase AuthUsecase, cfg *ServerConfig) *Server {

@@ -8,6 +8,7 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/go-testfixtures/testfixtures/v3 v3.10.0
 	github.com/golang/mock v1.6.0
+	github.com/joho/godotenv v1.5.1
 	github.com/koron/go-dproxy v1.3.0
 	github.com/rs/xid v1.5.0
 	github.com/shopspring/decimal v1.3.1
