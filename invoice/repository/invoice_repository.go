@@ -50,6 +50,7 @@ type InvoiceWithCustomerGUID struct {
 
 func (r *InvoiceRepository) Create(ctx context.Context, invoice *models.Invoice) error {
 	var customerID, companyID uint32
+	var companyGUID string
 	err := r.db.QueryRowContext(ctx, "SELECT id, company_id FROM customer WHERE guid=?", invoice.CustomerGUID).Scan(&companyID, &customerID)
 	if err != nil {
 		switch {
@@ -58,6 +59,20 @@ func (r *InvoiceRepository) Create(ctx context.Context, invoice *models.Invoice)
 		default:
 			return errpkg.NewInternalError(err)
 		}
+	}
+
+	err = r.db.QueryRowContext(ctx, "SELECT guid FROM company WHERE id=?", companyID).Scan(&companyGUID)
+	if err != nil {
+		switch {
+		case err == sql.ErrNoRows:
+			return errpkg.NewNotFoundError(fmt.Errorf("customer not found: %v err: %v", invoice.CustomerGUID, err.Error()))
+		default:
+			return errpkg.NewInternalError(err)
+		}
+	}
+
+	if companyGUID != invoice.CompanyGUID {
+		return errpkg.NewInvalidArgumentError(fmt.Errorf("company guid is not match: %v", invoice.CompanyGUID))
 	}
 
 	_, err = r.db.ExecContext(ctx, `INSERT INTO invoice (
@@ -109,7 +124,7 @@ func (r *InvoiceRepository) List(ctx context.Context, companyGUID string, firstP
 	SELECT invoice.*, customer.guid FROM 
 	invoice
 	JOIN customer ON invoice.customer_id = customer.id
-	WHERE ? AND payment_date BETWEEN ? AND ?`, companyGUID, firstPaymentDate, lastPaymentDate)
+	WHERE invoice.company_id = ? AND invoice.payment_date BETWEEN ? AND ?`, companyID, firstPaymentDate, lastPaymentDate)
 	if err != nil {
 		return nil, errpkg.NewInternalError(err)
 	}

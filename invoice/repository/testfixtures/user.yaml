@@ -1,0 +1,6 @@
+- id: 1
+  company_id: 1
+  guid: "user-1"
+  name: "テスト太郎"
+  email: "test@example.com"
+  password: "password"

@@ -27,7 +27,7 @@ $CMD_MYSQL -e "create table company (
     guid varchar(255) NOT NULL,
     company_id int(10) NOT NULL,
     name varchar(255) NOT NULL,
-    presitent_name varchar(255) NOT NULL,
+    president_name varchar(255) NOT NULL,
     tel varchar(255) NOT NULL,
     zip_code varchar(255) NOT NULL,
     address varchar(255) NOT NULL,

@@ -1,0 +1,8 @@
+- id: 1
+  guid: "customer-1"
+  company_id: 1
+  name: "株式会社テスト"
+  president_name: "テスト太郎"
+  tel: "090-1234-5678"
+  zip_code: "123-4567"
+  address: "東京都渋谷区渋谷1-2-3"

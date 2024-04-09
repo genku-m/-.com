@@ -24,8 +24,8 @@ func main() {
 	cfg := server.NewConfig()
 	dbDriver := "mysql"
 	c := mysql.Config{
-		DBName:    "main",
-		User:      "admin_user",
+		DBName:    "test_main",
+		User:      "test_user",
 		Passwd:    "password",
 		Addr:      "localhost:3306",
 		Net:       "tcp",
