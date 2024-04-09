@@ -1,8 +1,10 @@
 package server
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/genku-m/upsider-cording-test/auth"
 	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
 	"github.com/gin-gonic/gin"
 )
@@ -33,9 +35,18 @@ type InvoiceResponse struct {
 }
 
 func (s *Server) CreateInvoice(ctx *gin.Context) (*InvoiceResponse, error) {
+	// session check
+	loginInfo, err := auth.LoginCheck(ctx)
+	if err != nil {
+		return nil, errpkg.NewUnauthorizedError(err)
+	}
+
 	var cir CreateInvoiceRequest
 	if err := ctx.ShouldBindJSON(&cir); err != nil {
 		return nil, errpkg.NewInvalidArgumentError(err)
+	}
+	if loginInfo.CompanyGUID != cir.CompanyGUID {
+		return nil, errpkg.NewInvalidArgumentError(fmt.Errorf("company_guid is invalid: %v", cir.CompanyGUID))
 	}
 
 	invoice, err := s.invoiceUsecase.Create(ctx, cir.CompanyGUID, cir.CustomerGUID, cir.PublishDate, cir.Payment, cir.CommissionTaxRate, cir.TaxRate, cir.PaymentDate)
@@ -66,9 +77,19 @@ type ListInvoiceRequest struct {
 }
 
 func (s *Server) ListInvoice(ctx *gin.Context) ([]*InvoiceResponse, error) {
+	// session check
+	loginInfo, err := auth.LoginCheck(ctx)
+	if err != nil {
+		return nil, errpkg.NewUnauthorizedError(err)
+	}
+
 	var lir ListInvoiceRequest
 	if err := ctx.ShouldBindJSON(&lir); err != nil {
 		return nil, errpkg.NewInvalidArgumentError(err)
+	}
+
+	if loginInfo.CompanyGUID != lir.CompanyGUID {
+		return nil, errpkg.NewInvalidArgumentError(fmt.Errorf("company_guid is invalid: %v", lir.CompanyGUID))
 	}
 
 	invoices, err := s.invoiceUsecase.List(ctx, lir.CompanyGUID, lir.FirstPaymentDate, lir.LastPaymentDate)
