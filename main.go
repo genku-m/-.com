@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"time"
 
+	auth_repository "github.com/genku-m/upsider-cording-test/auth/repository"
+	auth_usecase "github.com/genku-m/upsider-cording-test/auth/usecase"
 	"github.com/genku-m/upsider-cording-test/guid"
 	"github.com/genku-m/upsider-cording-test/invoice/repository"
 	invoice_usecase "github.com/genku-m/upsider-cording-test/invoice/usecase"
@@ -39,6 +41,9 @@ func main() {
 	}
 	defer db.Close()
 
-	svr := server.NewServer(invoice_usecase.NewInvoiceUsecase(guid.New(), repository.NewInvoiceRepository(db)), cfg)
+	svr := server.NewServer(
+		invoice_usecase.NewInvoiceUsecase(guid.New(), repository.NewInvoiceRepository(db)),
+		auth_usecase.NewAuthUsecase(auth_repository.NewAuthRepository(db)),
+		cfg)
 	svr.Listen()
 }

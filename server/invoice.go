@@ -1,10 +1,15 @@
 package server
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
+	"github.com/genku-m/upsider-cording-test/models"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/koron/go-dproxy"
 )
 
 type CreateInvoiceRequest struct {
@@ -69,6 +74,22 @@ func (s *Server) ListInvoice(ctx *gin.Context) ([]*InvoiceResponse, error) {
 	var lir ListInvoiceRequest
 	if err := ctx.ShouldBindJSON(&lir); err != nil {
 		return nil, errpkg.NewInvalidArgumentError(err)
+	}
+
+	session := sessions.Default(ctx)
+	loginUserJson, err := dproxy.New(session.Get("loginUser")).String()
+	if err != nil {
+		return nil, errpkg.NewInternalError(err)
+	}
+	var loginInfo models.LoginInfo
+	err = json.Unmarshal([]byte(loginUserJson), &loginInfo)
+	if err != nil {
+		return nil, errpkg.NewInternalError(err)
+	}
+
+	if loginInfo.CompanyGUID != lir.CompanyGUID {
+		fmt.Println("loginInfo.CompanyGUID", loginInfo.CompanyGUID)
+		return nil, errpkg.NewInvalidArgumentError(fmt.Errorf("company_guid is invalid: %v", lir.CompanyGUID))
 	}
 
 	invoices, err := s.invoiceUsecase.List(ctx, lir.CompanyGUID, lir.FirstPaymentDate, lir.LastPaymentDate)

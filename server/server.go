@@ -3,7 +3,10 @@ package server
 import (
 	"net/http"
 
+	"github.com/genku-m/upsider-cording-test/auth"
 	errpkg "github.com/genku-m/upsider-cording-test/invoice/errors"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,6 +15,7 @@ type ServerConfig struct {
 
 type Server struct {
 	invoiceUsecase InvoiceUsecase
+	authUsecase    AuthUsecase
 	config         *ServerConfig
 }
 
@@ -19,9 +23,10 @@ func NewConfig() *ServerConfig {
 	return &ServerConfig{}
 }
 
-func NewServer(invoiceUsecase InvoiceUsecase, cfg *ServerConfig) *Server {
+func NewServer(invoiceUsecase InvoiceUsecase, authUsecase AuthUsecase, cfg *ServerConfig) *Server {
 	return &Server{
 		invoiceUsecase: invoiceUsecase,
+		authUsecase:    authUsecase,
 		config:         cfg,
 	}
 }
@@ -29,24 +34,35 @@ func NewServer(invoiceUsecase InvoiceUsecase, cfg *ServerConfig) *Server {
 func (s *Server) Listen() error {
 	router := gin.Default()
 	router.ContextWithFallback = true
-	router.POST("/api/invoices", func(ctx *gin.Context) {
-		res, err := s.CreateInvoice(ctx)
+	store := cookie.NewStore([]byte("secret"))
+	router.Use(sessions.Sessions("mysession", store))
+	router.POST("/login", func(ctx *gin.Context) {
+		err := s.Login(ctx)
 		if err != nil {
-			errHundler(ctx, err)
-			return
+			ctx.String(http.StatusUnauthorized, err.Error())
 		}
-		ctx.JSON(http.StatusOK, res)
 	})
+	authUserGroup := router.Group("/auth")
+	authUserGroup.Use(auth.LoginCheckMiddleware())
+	{
+		router.POST("/api/invoices", func(ctx *gin.Context) {
+			res, err := s.CreateInvoice(ctx)
+			if err != nil {
+				errHundler(ctx, err)
+				return
+			}
+			ctx.JSON(http.StatusOK, res)
+		})
 
-	router.GET("/api/invoices", func(ctx *gin.Context) {
-		res, err := s.ListInvoice(ctx)
-		if err != nil {
-			errHundler(ctx, err)
-			return
-		}
-		ctx.JSON(http.StatusOK, res)
-	})
-
+		router.GET("/api/invoices", func(ctx *gin.Context) {
+			res, err := s.ListInvoice(ctx)
+			if err != nil {
+				errHundler(ctx, err)
+				return
+			}
+			ctx.JSON(http.StatusOK, res)
+		})
+	}
 	router.GET("/health", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "")
 	})

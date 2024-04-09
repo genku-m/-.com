@@ -3,4 +3,4 @@
   guid: "user-1"
   name: "テスト太郎"
   email: "test@example.com"
-  password: "password"
+  password: "$2a$10$F0/QcqaJcNiuJVslhG84R.J5DydJftuRdU4HL4e2PMlm4odFVR2/2"
